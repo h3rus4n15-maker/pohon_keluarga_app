@@ -8,6 +8,20 @@ function getRootCandidate(members) {
   return root ? root.id : members[0] ? members[0].id : null
 }
 
+function sortByBirthDateAsc(a, b) {
+  const aDate = a?.dob ? new Date(a.dob).getTime() : Number.MAX_SAFE_INTEGER
+  const bDate = b?.dob ? new Date(b.dob).getTime() : Number.MAX_SAFE_INTEGER
+
+  if (Number.isNaN(aDate) && Number.isNaN(bDate)) {
+    return (a?.name || '').localeCompare(b?.name || '')
+  }
+
+  if (Number.isNaN(aDate)) return 1
+  if (Number.isNaN(bDate)) return -1
+
+  return aDate - bDate
+}
+
 function MemberCard({ member, onClick, size = 'normal', highlight = false }) {
   if (!member) return null
   const ageInfo = calculateAge(member.dob, member.deathDate)
@@ -73,11 +87,22 @@ export default function TreeView({ members, onSelectMember }) {
   const mother = focused.motherId ? memberMap.get(focused.motherId) : null
   const spouse = focused.spouseId ? memberMap.get(focused.spouseId) : null
 
-  const children = members.filter((m) => {
-    if (m.fatherId === focused.id || m.motherId === focused.id) return true
-    if (spouse && (m.fatherId === spouse.id || m.motherId === spouse.id)) return true
-    return false
-  })
+  const children = members
+    .filter((m) => {
+      if (m.fatherId === focused.id || m.motherId === focused.id) return true
+      if (spouse && (m.fatherId === spouse.id || m.motherId === spouse.id)) return true
+      return false
+    })
+    .sort((a, b) => {
+      const ordered = sortByBirthDateAsc(a, b)
+      if (ordered !== 0) return ordered
+
+      const aOrder = a?.birthOrder ?? 0
+      const bOrder = b?.birthOrder ?? 0
+      if (aOrder !== bOrder) return aOrder - bOrder
+
+      return (a?.name || '').localeCompare(b?.name || '')
+    })
 
   const handleRefocus = (member) => {
     if (member.id === focused.id) return
