@@ -87,7 +87,7 @@ export default function TreeView({ members, onSelectMember }) {
   const mother = focused.motherId ? memberMap.get(focused.motherId) : null
   const spouse = focused.spouseId ? memberMap.get(focused.spouseId) : null
 
-  const children = members
+  const orderedChildren = [...members]
     .filter((m) => {
       if (m.fatherId === focused.id || m.motherId === focused.id) return true
       if (spouse && (m.fatherId === spouse.id || m.motherId === spouse.id)) return true
@@ -121,7 +121,7 @@ export default function TreeView({ members, onSelectMember }) {
   }
 
   const hasParents = Boolean(father || mother)
-  const hasChildren = children.length > 0
+  const hasChildren = orderedChildren.length > 0
 
   return (
     <div className="tree-container tree-focused">
@@ -164,7 +164,7 @@ export default function TreeView({ members, onSelectMember }) {
         <>
           <div className="focus-connector" />
           <div className="focus-row focus-row-children">
-            {children.map((child) => (
+            {orderedChildren.map((child) => (
               <MemberCard key={child.id} member={child} onClick={handleRefocus} size="small" />
             ))}
           </div>
